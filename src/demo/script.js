@@ -18,9 +18,19 @@ const svg = {
   padding: 10,
 };
 
-const minSize = (tree, xy) => tree.nodes.reduce(
-  (min, n) => Math.min(min, n.data[xy]), Infinity);
+/**
+ * 
+ * @param {*} tree        A d3.hierarchy instance.
+ * @param {*} getNodeXY   A callback to return either the X or Y component of the node's size.
+ */
+const minSize = function(tree, getNodeXY) {
+  return tree.nodes.reduce((min, node) => {
+    return Math.min(min, getNodeXY(node));
+  }, Infinity);
+};
 
+const getNodeX = (flexNode) => flexNode.data.size[0];
+const getNodeY = (flexNode) => flexNode.data.size[1];
 
 const customSpacing = (() => {
   const button = select('#custom-spacing');
@@ -61,12 +71,13 @@ const renderTree = spec => {
   const context = results[spec.num] = {spec};
 
   const layout = context.layout = flextree({
-    children: d => d.slice(2),
-    nodeSize: n => n.data.slice(0, 2),
+    children: node => node.children,
+    nodeSize: flexNode => flexNode.data.size,
   });
+
   const tree = context.tree = layout.hierarchy(spec.data);
   if (customSpacing())
-    layout.spacing((a, b) => 0.2 * minSize(tree, 0) * a.path(b).length);
+    layout.spacing((a, b) => 0.2 * minSize(tree, getNodeX) * a.path(b).length);
   tree.nodes.forEach((n, i) => {
     n.id = i;
     n.hue = Math.floor(Math.random() * 360);
@@ -85,7 +96,8 @@ function drawTree(label, context) {
   div.append('h3').text(label);
 
   const {width, height, padding} = svg;
-  const svgElem = div.append('svg').attrs({
+  const svgElem = div.append('svg')
+    .attrs({
     width: width + 2 * padding,
     height: height + 2 * padding,
   });
@@ -107,7 +119,8 @@ function drawSubtree(node, context, parent=null) {
   const {tree, drawing, scale} = context;
   const [width, height] = node.size;
   const {x, y} = node;
-  drawing.append('rect').attrs({
+  drawing.append('rect')
+    .attrs({
     'class': 'node',
     rx: 5 / scale,
     ry: 5 / scale,
@@ -117,9 +130,10 @@ function drawSubtree(node, context, parent=null) {
     height,
   });
 
-  const paddingSide = minSize(tree, 0) * 0.1;
-  const paddingBottom = minSize(tree, 1) * 0.2;
-  drawing.append('rect').attrs({
+  const paddingSide = minSize(tree, getNodeX) * 0.1;
+  const paddingBottom = minSize(tree, getNodeY) * 0.2;
+  drawing.append('rect')
+    .attrs({
     rx: 5 / scale,
     ry: 5 / scale,
     x: x - width / 2 + paddingSide,

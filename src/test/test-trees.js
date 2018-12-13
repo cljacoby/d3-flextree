@@ -2,6 +2,31 @@
 // `expected` specifies the expected x and y coordinates.
 
 export default [
+  {
+    desc: "my tree",
+    data: {
+        size: [20, 20],
+        children: [
+          {
+            size: [10, 10],
+            children: []
+          },
+          {
+            size: [10, 10],
+            children: []
+          },
+          {
+            size: [10, 10],
+            children: []
+          }
+        ]
+      }
+  }
+];
+
+
+// export default
+const og = [
   { desc: 'simplest possible tree',
     data: [
       100, 100,
